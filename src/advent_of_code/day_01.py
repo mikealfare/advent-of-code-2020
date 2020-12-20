@@ -17,7 +17,7 @@ def get_permutations_with_sum_limit(entries: set, length: int, sum_limit: int) -
 
 
 if __name__ == '__main__':
-    with open('input_files/day_1.txt') as f:
+    with open('input_files/day_01.txt') as f:
         expense_report_entries = {int(line.replace('\n', '')) for line in f.readlines()}
     print(expense_report_entries)
     target_combination_2 = get_permutations_with_sum_limit(

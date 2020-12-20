@@ -1,5 +1,5 @@
 import pytest
-from tests.conftest import day_2
+from tests.conftest import day_02
 
 
 @pytest.mark.parametrize(
@@ -11,7 +11,7 @@ from tests.conftest import day_2
     ]
 )
 def test_password_rule_count_validation(rule_string: str, password: str, is_valid: bool):
-    password_rule = day_2.PasswordRuleCount(rule_string)
+    password_rule = day_02.PasswordRuleCount(rule_string)
     assert password_rule.validate(password) is is_valid
 
 
@@ -26,7 +26,7 @@ def test_password_rule_count_validation(rule_string: str, password: str, is_vali
     ]
 )
 def test_password_rule_exists_validation(rule_string: str, password: str, is_valid: bool):
-    password_rule = day_2.PasswordRuleExists(rule_string)
+    password_rule = day_02.PasswordRuleExists(rule_string)
     assert password_rule.validate(password) is is_valid
 
 
@@ -41,5 +41,5 @@ def test_password_rule_exists_validation(rule_string: str, password: str, is_val
     ]
 )
 def test_password_entry_exists_validation(password_string: str, is_valid: bool):
-    password_entry = day_2.PasswordEntry(password_string, day_2.EXISTS)
+    password_entry = day_02.PasswordEntry(password_string, day_02.EXISTS)
     assert password_entry.is_valid() is is_valid

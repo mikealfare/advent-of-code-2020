@@ -23,7 +23,7 @@ class Seat:
 
 
 if __name__ == '__main__':
-    with open('input_files/day_5.txt') as f:
+    with open('input_files/day_05.txt') as f:
         seat_binary_strings = [line.replace('\n', '') for line in f.readlines()]
     seats = [Seat(seat) for seat in seat_binary_strings]
     seat_ids = [seat.id for seat in seats]

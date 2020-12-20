@@ -106,7 +106,7 @@ def get_passports_from_file(file_path: str) -> List[Passport]:
 
 
 if __name__ == '__main__':
-    all_passports = get_passports_from_file('input_files/day_4.txt')
+    all_passports = get_passports_from_file('input_files/day_04.txt')
     populated_passports = [passport for passport in all_passports if passport.is_populated()]
     print(f'There are {len(populated_passports)} populated passports')
     valid_passports = [passport for passport in all_passports if passport.is_valid()]

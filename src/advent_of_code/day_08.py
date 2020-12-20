@@ -53,7 +53,7 @@ def get_accumulator_by_fixing_broken_instruction(instructions: dict) -> int:
 
 
 def main():
-    with open('input_files/day_8.txt') as f:
+    with open('input_files/day_08.txt') as f:
         human_instructions = [line.replace('\n', '') for line in f.readlines()]
     instructions = convert_human_instructions_to_instructions_dict(human_instructions=human_instructions)
     _, accumulator = get_accumulator_when_instructions_loop_or_complete(instructions)

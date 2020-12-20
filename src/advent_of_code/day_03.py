@@ -40,7 +40,7 @@ class Map:
 
 
 if __name__ == '__main__':
-    with open('input_files/day_3.txt') as f:
+    with open('input_files/day_03.txt') as f:
         map_file = f.read()
     tree_map = Map(map_file)
     print(f'1 right, 1 down encounters {tree_map.get_trees_in_path_map(row_step=1, column_step=1)} trees')

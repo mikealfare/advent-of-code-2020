@@ -33,7 +33,7 @@ def get_forms_from_file(file_path: str) -> List[Form]:
 
 
 if __name__ == '__main__':
-    forms = get_forms_from_file('input_files/day_6.txt')
+    forms = get_forms_from_file('input_files/day_06.txt')
     any_responses = [len(form.get_distinct_responses_any()) for form in forms]
     print(f'There are {sum(any_responses)} responses for anyone in a group')
     all_responses = [len(form.get_distinct_responses_all()) for form in forms]

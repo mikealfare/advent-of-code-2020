@@ -1,12 +1,12 @@
 import pytest
-from tests.conftest import day_7
+from tests.conftest import day_07
 
 
 @pytest.mark.parametrize('rule,color', [
     ('muted lavender bags contain 5 dull brown bags, 4 pale maroon bags, 2 drab orange bags.', 'muted lavender')
 ])
 def test_parse_bag_color_from_rule(rule, color):
-    rule = day_7.convert_human_rule_to_dict(rule)
+    rule = day_07.convert_human_rule_to_dict(rule)
     assert color in rule
 
 
@@ -16,7 +16,7 @@ def test_parse_bag_color_from_rule(rule, color):
      {'dull brown': 5, 'pale maroon': 4, 'drab orange': 2})
 ])
 def test_parse_contained_bags_from_rule(rule, color, contained_bags):
-    rule = day_7.convert_human_rule_to_dict(rule)
+    rule = day_07.convert_human_rule_to_dict(rule)
     assert rule[color] == contained_bags
 
 
@@ -38,16 +38,16 @@ sample_rules = [
     ({'shiny gold', 'bright white'}, {'bright white', 'muted yellow', 'light red', 'dark orange'}),
 ])
 def test_get_bags_that_contain_given_bags_directly(bags: set, expected: set):
-    ruleset = day_7.convert_human_rules_to_ruleset_dict(sample_rules)
-    assert day_7.get_bags_that_contain_given_bags_directly(bags=bags, ruleset=ruleset) == expected
+    ruleset = day_07.convert_human_rules_to_ruleset_dict(sample_rules)
+    assert day_07.get_bags_that_contain_given_bags_directly(bags=bags, ruleset=ruleset) == expected
 
 
 def test_get_bags_that_contain_given_bag():
-    ruleset = day_7.convert_human_rules_to_ruleset_dict(sample_rules)
+    ruleset = day_07.convert_human_rules_to_ruleset_dict(sample_rules)
     expected = {'bright white', 'muted yellow', 'dark orange', 'light red'}
-    assert day_7.get_bags_that_contain_given_bag('shiny gold', ruleset) == expected
+    assert day_07.get_bags_that_contain_given_bag('shiny gold', ruleset) == expected
 
 
 def test_get_total_bags_within_given_bag():
-    ruleset = day_7.convert_human_rules_to_ruleset_dict(sample_rules)
-    assert day_7.get_total_bags_within_given_bag('shiny gold', ruleset) == 32
+    ruleset = day_07.convert_human_rules_to_ruleset_dict(sample_rules)
+    assert day_07.get_total_bags_within_given_bag('shiny gold', ruleset) == 32

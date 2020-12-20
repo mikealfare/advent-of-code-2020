@@ -59,7 +59,7 @@ def get_total_bags_within_given_bag(bag: str, ruleset: dict) -> int:
 
 
 def main():
-    with open('input_files/day_7.txt') as f:
+    with open('input_files/day_07.txt') as f:
         human_rules = [line.replace('\n', '') for line in f.readlines()]
     ruleset = convert_human_rules_to_ruleset_dict(human_rules=human_rules)
     shiny_gold_bags = get_bags_that_contain_given_bag(bag='shiny gold', ruleset=ruleset)

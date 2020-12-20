@@ -1,4 +1,4 @@
-from tests.conftest import day_8
+from tests.conftest import day_08
 
 
 sample_human_instructions = [
@@ -37,22 +37,22 @@ expected_fixed_instructions = {
 
 
 def test_convert_human_instructions_to_instructions_dict():
-    assert day_8.convert_human_instructions_to_instructions_dict(sample_human_instructions) == expected_instructions
+    assert day_08.convert_human_instructions_to_instructions_dict(sample_human_instructions) == expected_instructions
 
 
 def test_get_accumulator_when_instructions_loop_or_complete():
-    instructions = day_8.convert_human_instructions_to_instructions_dict(sample_human_instructions)
-    assert day_8.get_accumulator_when_instructions_loop_or_complete(instructions) == (1, 5)
+    instructions = day_08.convert_human_instructions_to_instructions_dict(sample_human_instructions)
+    assert day_08.get_accumulator_when_instructions_loop_or_complete(instructions) == (1, 5)
 
 
 def test_get_fixed_instructions():
-    instructions = day_8.convert_human_instructions_to_instructions_dict(sample_human_instructions)
-    fixed_instructions = day_8.get_fixed_instructions(instructions, 7)
+    instructions = day_08.convert_human_instructions_to_instructions_dict(sample_human_instructions)
+    fixed_instructions = day_08.get_fixed_instructions(instructions, 7)
     assert fixed_instructions == expected_fixed_instructions
-    original_instructions = day_8.convert_human_instructions_to_instructions_dict(sample_human_instructions)
+    original_instructions = day_08.convert_human_instructions_to_instructions_dict(sample_human_instructions)
     assert instructions == original_instructions
 
 
 def test_get_accumulator_by_fixing_broken_instruction():
-    instructions = day_8.convert_human_instructions_to_instructions_dict(sample_human_instructions)
-    assert day_8.get_accumulator_by_fixing_broken_instruction(instructions) == 8
+    instructions = day_08.convert_human_instructions_to_instructions_dict(sample_human_instructions)
+    assert day_08.get_accumulator_by_fixing_broken_instruction(instructions) == 8

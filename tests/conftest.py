@@ -6,4 +6,4 @@ PROJECT_ROOT = PACKAGE_ROOT.parent
 
 sys.path.insert(0, str(PROJECT_ROOT.absolute()))
 
-from src.advent_of_code import day_1, day_2, day_3, day_4, day_5, day_6, day_7, day_8
+from src.advent_of_code import day_01, day_02, day_03, day_04, day_05, day_06, day_07, day_08

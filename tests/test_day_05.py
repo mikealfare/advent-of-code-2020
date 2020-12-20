@@ -1,6 +1,6 @@
 import pytest
 
-from tests.conftest import day_5
+from tests.conftest import day_05
 
 
 @pytest.mark.parametrize('binary_string,row,column,seat_id', [
@@ -9,7 +9,7 @@ from tests.conftest import day_5
     ('BBFFBBFRLL', 102, 4, 820),
 ])
 def test_get_set_from_binary_string(binary_string: str, row: int, column: int, seat_id: int):
-    seat = day_5.Seat(binary_string)
+    seat = day_05.Seat(binary_string)
     assert seat.row == row
     assert seat.column == column
     assert seat.id == seat_id

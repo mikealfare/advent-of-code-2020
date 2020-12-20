@@ -60,7 +60,7 @@ class PasswordRuleExists:
 
 
 if __name__ == '__main__':
-    with open('input_files/day_2.txt') as f:
+    with open('input_files/day_02.txt') as f:
         password_entries = [line.replace('\n', '') for line in f.readlines()]
     passwords = [PasswordEntry(password_entry=entry, validation_scheme=EXISTS) for entry in password_entries]
     valid_passwords = [password for password in passwords if password.is_valid()]
