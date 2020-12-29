@@ -89,17 +89,14 @@ def get_passport_from_config_string(config_string: str) -> Passport:
 
 
 def get_passports_from_file(file_path: Path) -> List[Passport]:
-    passports = []
-    this_passport = []
+    passports = ['']
     with open(file_path) as f:
         for line in f.readlines():
             if line.strip() == '':
-                passport = get_passport_from_config_string(' '.join(this_passport))
-                passports.append(passport)
-                this_passport = []
+                passports.append('')
             else:
-                this_passport.append(line.strip())
-    return passports
+                passports[-1] = ' '.join([passports[-1], line]).strip()
+    return [get_passport_from_config_string(passport) for passport in passports]
 
 
 def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_04.txt'):
