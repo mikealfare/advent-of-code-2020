@@ -1,35 +1,36 @@
 from typing import List
-from itertools import permutations
+from itertools import combinations
+from pathlib import Path
 
 
-def sum_exists(port_numbers: List[int], port_sum: int) -> bool:
-    potential_sums = {sum(sum_parts) for sum_parts in permutations(port_numbers, 2)}
-    return port_sum in potential_sums
+PortNumber = int
 
 
-def find_first_error(port_numbers: List[int], preamble: int) -> int:
-    for element in range(preamble, len(port_numbers)):
-        if not sum_exists(port_numbers[element-preamble:element], port_numbers[element]):
-            return port_numbers[element]
+def find_first_error(port_numbers: List[PortNumber], preamble: int) -> PortNumber:
+    for index, port_number in enumerate(port_numbers):
+        if index < preamble:
+            continue
+        preamble_subset = port_numbers[index - preamble:index]
+        preamble_sums = {sum(sum_parts) for sum_parts in combinations(preamble_subset, 2)}
+        if port_number not in preamble_sums:
+            return port_number
 
 
-def find_contiguous_numbers_adding_to_provided_sum(port_numbers: List[int], target_sum: int) -> List[int]:
-    for element in range(len(port_numbers)):
+def find_contiguous_numbers_adding_to_target_sum(port_numbers: List[PortNumber], target_sum: int) -> List[PortNumber]:
+    for index in range(len(port_numbers)):
         this_subset = []
-        subset_length = 2
-        while sum(this_subset) < target_sum:
-            this_subset = port_numbers[element:element + subset_length]
-            subset_length += 1
+        while sum(this_subset) < target_sum or len(this_subset) < 2:
+            this_subset.append(port_numbers[index + len(this_subset)])
         if sum(this_subset) == target_sum:
             return this_subset
 
 
-def main():
-    with open('input_files/day_09.txt') as f:
-        port_numbers = [int(line.strip().replace('\n', '')) for line in f.readlines()]
+def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_09.txt'):
+    with open(file_path) as f:
+        port_numbers = [int(line.strip()) for line in f.readlines()]
     first_error = find_first_error(port_numbers, 25)
-    print(f'the first error exists at {first_error}')
-    contiguous_subset = find_contiguous_numbers_adding_to_provided_sum(port_numbers, first_error)
+    print(f'the first error occurs at {first_error}')
+    contiguous_subset = find_contiguous_numbers_adding_to_target_sum(port_numbers, first_error)
     print(f'the sum of the min and max of the subset is {min(contiguous_subset) + max(contiguous_subset)}')
 
 

@@ -1,3 +1,5 @@
+from typing import List
+
 import pytest
 
 from tests.conftest import day_09
@@ -12,10 +14,14 @@ sample_port_numbers = [
 
 
 @pytest.mark.parametrize('port_numbers,preamble,expected', [(sample_port_numbers, 5, 127)])
-def test_find_first_error(port_numbers, preamble, expected):
-    assert day_09.find_first_error(port_numbers=port_numbers, preamble=preamble) == expected
+def test_find_first_error(port_numbers: List[day_09.PortNumber], preamble: int, expected: day_09.PortNumber):
+    assert day_09.find_first_error(port_numbers, preamble) == expected
 
 
 @pytest.mark.parametrize('port_numbers,target_sum,expected', [(sample_port_numbers, 127, [15, 25, 47, 40])])
-def test_find_first_error(port_numbers, target_sum, expected):
-    assert day_09.find_contiguous_numbers_adding_to_provided_sum(port_numbers, target_sum) == expected
+def test_find_contiguous_numbers_adding_to_target_sum(
+        port_numbers: List[day_09.PortNumber],
+        target_sum: int,
+        expected: List[day_09.PortNumber]
+):
+    assert day_09.find_contiguous_numbers_adding_to_target_sum(port_numbers, target_sum) == expected
