@@ -1,35 +1,21 @@
+from pathlib import Path
 
 
-class Seat:
+def get_seat_id(binary_string: str) -> int:
+    return int(binary_string.replace('F', '0').replace('B', '1').replace('L', '0').replace('R', '1'), 2)
 
-    def __init__(self, binary_string: str):
-        self.binary_string = binary_string
 
-    @property
-    def row(self) -> int:
-        row_string = self.binary_string[:7]
-        row_string = row_string.replace('F', '0').replace('B', '1')
-        return int(row_string, 2)
-
-    @property
-    def column(self) -> int:
-        column_string = self.binary_string[-3:]
-        column_string = column_string.replace('L', '0').replace('R', '1')
-        return int(column_string, 2)
-
-    @property
-    def id(self):
-        return self.row * 8 + self.column
+def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_05.txt'):
+    with open(file_path) as f:
+        seats = [line.strip() for line in f.readlines()]
+    seat_ids = {get_seat_id(seat) for seat in seats}
+    max_id = max(seat_ids)
+    print(f'max seat id = {max_id}')
+    min_id = min(seat_ids)
+    all_seats = set(range(min_id, max_id + 1))
+    missing_seats = all_seats.difference(seat_ids)
+    print(f'missing seat ids = {missing_seats}')
 
 
 if __name__ == '__main__':
-    with open('input_files/day_05.txt') as f:
-        seat_binary_strings = [line.replace('\n', '') for line in f.readlines()]
-    seats = [Seat(seat) for seat in seat_binary_strings]
-    seat_ids = [seat.id for seat in seats]
-    max_id = max(seat_ids)
-    min_id = min(seat_ids)
-    all_seats = set(range(min_id, max_id + 1))
-    missing_seats = all_seats.difference(set(seat_ids))
-    print(f'max seat id = {max_id}')
-    print(f'missing seat ids = {missing_seats}')
+    main()
