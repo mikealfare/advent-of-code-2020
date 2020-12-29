@@ -1,33 +1,40 @@
+import pytest
+
 from tests.conftest import day_03
 
 
-sample_map_string = '''..##.......
-#...#...#..
-.#....#..#.
-..#.#...#.#
-.#...##..#.
-..#.##.....
-.#.#.#....#
-.#........#
-#.##...#...
-#...##....#
-.#..#...#.#'''
+sample_tree_map = [
+    '..##.......',
+    '#...#...#..',
+    '.#....#..#.',
+    '..#.#...#.#',
+    '.#...##..#.',
+    '..#.##.....',
+    '.#.#.#....#',
+    '.#........#',
+    '#.##...#...',
+    '#...##....#',
+    '.#..#...#.#'
+]
 
 
-def test_print():
-    tree_map = day_03.Map(sample_map_string)
-    tree_map.print()
-    assert tree_map.width == 11
-    assert tree_map.height == 11
+@pytest.mark.parametrize('tree_map,row,column,expected', [
+    (sample_tree_map, 1, 3, True),
+    (sample_tree_map, 2, 1, True),
+    (sample_tree_map, 4, 11, True),
+    (sample_tree_map, 1, 1, False),
+    (sample_tree_map, 2, 2, False)
+])
+def test_is_tree(tree_map: day_03.TreeMap, row: int, column: int, expected: bool):
+    assert day_03.is_tree(tree_map, row, column) == expected
 
 
-def test_get_path_map():
-    tree_map = day_03.Map(sample_map_string)
-    path_map = tree_map.get_path_map(row_step=1, column_step=3)
-    expected_path_map = [0, 1, 0, 1, 1, 0, 1, 1, 1, 1]
-    assert path_map == expected_path_map
-
-
-def test_get_trees_in_path_map():
-    tree_map = day_03.Map(sample_map_string)
-    assert tree_map.get_trees_in_path_map(row_step=1, column_step=3) == 7
+@pytest.mark.parametrize('tree_map,row_step,column_step,expected', [
+    (sample_tree_map, 1, 1, 2),
+    (sample_tree_map, 1, 3, 7),
+    (sample_tree_map, 1, 5, 3),
+    (sample_tree_map, 1, 7, 4),
+    (sample_tree_map, 2, 1, 2),
+])
+def test_get_tree_count_in_slope(tree_map: day_03.TreeMap, row_step: int, column_step: int, expected: int):
+    assert day_03.get_tree_count_in_slope(tree_map, row_step, column_step) == expected
