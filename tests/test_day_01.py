@@ -1,18 +1,8 @@
+import pytest
+
 from tests.conftest import day_01
 
 
-def test_get_permutations():
-    entries = {30, 40, 50}
-    length = 2
-    expected = {(30, 40), (30, 50), (40, 50)}
-    actual = day_01.get_permutations(entries=entries, length=length)
-    assert actual == expected
-
-
-def test_get_permutations_with_sum_limit():
-    entries = {30, 40, 50}
-    length = 2
-    sum_limit = 70
-    expected = {(30, 40)}
-    actual = day_01.get_permutations_with_sum_limit(entries=entries, length=length, sum_limit=sum_limit)
-    assert actual == expected
+@pytest.mark.parametrize('entries,sum_limit,expected', [({30, 40, 50}, 70, 1200)])
+def test_get_permutations_with_sum_limit(entries: day_01.Expenses, sum_limit: int, expected: int):
+    assert day_01.get_product_of_combinations_with_sum_limit(entries, sum_limit) == expected

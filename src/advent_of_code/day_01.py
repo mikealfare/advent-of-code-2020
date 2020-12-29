@@ -1,34 +1,24 @@
 import math
-from itertools import permutations
+from itertools import combinations
+from pathlib import Path
+from typing import Set
 
 
-def get_permutations(entries: set, length: int) -> set:
-    order_dependent = set(permutations(entries, length))
-    order_independent = set()
-    for perm in order_dependent:
-        if perm == tuple(sorted(perm)):
-            order_independent.add(perm)
-    return order_independent
+Expenses = Set[int]
 
 
-def get_permutations_with_sum_limit(entries: set, length: int, sum_limit: int) -> set:
-    perms = get_permutations(entries, length)
-    return {perm for perm in perms if sum(perm) == sum_limit}
+def get_product_of_combinations_with_sum_limit(entries: Expenses, sum_limit: int, length: int = 2) -> int:
+    return math.prod({combo for combo in combinations(entries, length) if sum(combo) == sum_limit}.pop())
+
+
+def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_01.txt'):
+    with open(file_path) as f:
+        expense_report_entries = {int(line.strip()) for line in f.readlines()}
+    combo_2 = get_product_of_combinations_with_sum_limit(expense_report_entries, 2020)
+    combo_3 = get_product_of_combinations_with_sum_limit(expense_report_entries, 2020, length=3)
+    print(f'2 elements product = {combo_2}')
+    print(f'3 elements product = {combo_3}')
 
 
 if __name__ == '__main__':
-    with open('input_files/day_01.txt') as f:
-        expense_report_entries = {int(line.replace('\n', '')) for line in f.readlines()}
-    print(expense_report_entries)
-    target_combination_2 = get_permutations_with_sum_limit(
-        entries=expense_report_entries,
-        length=2,
-        sum_limit=2020
-    ).pop()
-    target_combination_3 = get_permutations_with_sum_limit(
-        entries=expense_report_entries,
-        length=3,
-        sum_limit=2020
-    ).pop()
-    print(f'2 elements = {target_combination_2}; product = {math.prod(target_combination_2)}')
-    print(f'3 elements = {target_combination_3}; product = {math.prod(target_combination_3)}')
+    main()
