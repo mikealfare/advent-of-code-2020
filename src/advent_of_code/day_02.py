@@ -1,68 +1,52 @@
-from enum import Enum
+from typing import Tuple, List
+from pathlib import Path
 
 
-COUNT = 0
-EXISTS = 1
+def parse_rule(rule: str) -> Tuple[str, int, int]:
+    numbers, letter = rule.split(' ')
+    first, second = numbers.split('-')
+    return letter, int(first), int(second)
 
 
-class PasswordEntry:
-
-    def __init__(self, password_entry: str, validation_scheme: int):
-        self.password_entry = password_entry
-        rule_string, password = password_entry.split(':')
-        self.password = password.strip()
-        if validation_scheme == COUNT:
-            self.password_rule = PasswordRuleCount(rule_string)
-        elif validation_scheme == EXISTS:
-            self.password_rule = PasswordRuleExists(rule_string)
-        else:
-            raise ValueError('Unsupported validation rule scheme')
-
-    def is_valid(self) -> bool:
-        return self.password_rule.validate(self.password)
+def is_valid_by_count(password: str, rule: str) -> bool:
+    letter, min_occ, max_occ = parse_rule(rule)
+    occurrences = password.count(letter)
+    return occurrences in range(min_occ, max_occ + 1)
 
 
-class PasswordRuleCount:
-
-    def __init__(self, rule_string: str):
-        requirement_range, self.letter = rule_string.split(' ')
-        min_occ, max_occ = requirement_range.split('-')
-        self.minimum_occurrences = int(min_occ)
-        self.maximum_occurrences = int(max_occ)
-
-    def validate(self, password: str) -> bool:
-        occurrences = password.count(self.letter)
-        return (self.minimum_occurrences <= occurrences) & (occurrences <= self.maximum_occurrences)
+def is_valid_by_existence(password: str, rule: str) -> bool:
+    letter, first_occ, second_occ = parse_rule(rule)
+    first_index = first_occ - 1
+    second_index = second_occ - 1
+    return (password[first_index] == letter) != (password[second_index] == letter)
 
 
-class PasswordRuleExists:
+def get_valid_count_by_count(password_entries: List[str]) -> int:
+    valid_count = 0
+    for entry in password_entries:
+        rule, password = entry.split(': ')
+        if is_valid_by_count(password, rule):
+            valid_count += 1
+    return valid_count
 
-    def __init__(self, rule_string: str):
-        requirement_occurrences, self.letter = rule_string.split(' ')
-        first_occurrence, second_occurrence = requirement_occurrences.split('-')
-        self.first_occurrence = int(first_occurrence)-1
-        self.second_occurrence = int(second_occurrence)-1
 
-    def validate(self, password: str) -> bool:
-        occurrences = [password[self.first_occurrence], password[self.second_occurrence]]
-        valid_occurrences = [occurrence for occurrence in occurrences if occurrence == self.letter]
-        is_valid_by_count = (len(valid_occurrences) == 1)
+def get_valid_count_by_existence(password_entries: List[str]) -> int:
+    valid_count = 0
+    for entry in password_entries:
+        rule, password = entry.split(': ')
+        if is_valid_by_existence(password, rule):
+            valid_count += 1
+    return valid_count
 
-        is_valid_first = False
-        is_valid_second = False
-        if password[self.first_occurrence] == self.letter:
-            is_valid_first = True
-        if password[self.second_occurrence] == self.letter:
-            is_valid_second = True
-        is_valid_by_eval = (is_valid_first != is_valid_second)
 
-        return is_valid_by_eval
+def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_02.txt'):
+    with open(file_path) as f:
+        password_entries = [line.strip() for line in f.readlines()]
+    valid_by_count = get_valid_count_by_count(password_entries)
+    valid_by_existence = get_valid_count_by_existence(password_entries)
+    print(f'valid by count: {valid_by_count}')
+    print(f'valid by existence: {valid_by_existence}')
 
 
 if __name__ == '__main__':
-    with open('input_files/day_02.txt') as f:
-        password_entries = [line.replace('\n', '') for line in f.readlines()]
-    passwords = [PasswordEntry(password_entry=entry, validation_scheme=EXISTS) for entry in password_entries]
-    valid_passwords = [password for password in passwords if password.is_valid()]
-    valid_password_entries = [pw.password_entry for pw in valid_passwords]
-    print(f'valid_password_count: {len(valid_passwords)}; entries: {valid_password_entries}')
+    main()
