@@ -58,24 +58,18 @@ Instruction = Union[Move, Turn, Forward]
 
 
 def parse_instruction(human_instruction: str) -> Instruction:
-    direction = human_instruction[0]
+    instruction = human_instruction[0]
     amount = int(human_instruction[1:])
-    if direction == 'N':
-        return Move(0, amount)
-    elif direction == 'E':
-        return Move(amount, 0)
-    elif direction == 'S':
-        return Move(0, -amount)
-    elif direction == 'W':
-        return Move(-amount, 0)
-    elif direction == 'L':
-        return Turn(amount % 360)
-    elif direction == 'R':
-        return Turn(-amount % 360)
-    elif direction == 'F':
-        return Forward(amount)
-    else:
-        raise ValueError('ERROR - unsupported direction')
+    instruction_map = {
+        'N': Move(0, amount),
+        'E': Move(amount, 0),
+        'S': Move(0, -amount),
+        'W': Move(-amount, 0),
+        'L': Turn(amount % 360),
+        'R': Turn(-amount % 360),
+        'F': Forward(amount)
+    }
+    return instruction_map[instruction]
 
 
 def parse_input(human_instructions: List[str]) -> List[Instruction]:
