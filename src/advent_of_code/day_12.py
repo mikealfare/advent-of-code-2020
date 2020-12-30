@@ -1,5 +1,23 @@
 from dataclasses import dataclass
 from typing import Union, List
+from pathlib import Path
+from math import cos, sin, radians
+
+
+@dataclass
+class Move:
+    x: int
+    y: int
+
+
+@dataclass
+class Turn:
+    degrees: int
+
+
+@dataclass
+class Forward:
+    distance: int
 
 
 @dataclass
@@ -7,144 +25,100 @@ class Point:
     x: int = 0
     y: int = 0
 
+    def move(self, move: Move):
+        self.x += move.x
+        self.y += move.y
+
+    def rotate(self, turn: Turn):
+        self.x, self.y = (
+            self.x * int(cos(radians(turn.degrees))) - self.y * int(sin(radians(turn.degrees))),
+            self.x * int(sin(radians(turn.degrees))) + self.y * int(cos(radians(turn.degrees)))
+        )
+
     @property
     def manhattan_distance(self) -> int:
         return abs(self.x) + abs(self.y)
 
 
 @dataclass
-class Waypoint(Point):
-    pass
-
-
-@dataclass
 class Boat(Point):
-    bearing: str = 'E'
+    bearing: int = 0
+
+    def turn(self, turn: Turn):
+        self.bearing = (self.bearing + turn.degrees) % 360
+
+    def move_forward(self, forward: Forward):
+        self.move(Move(
+            forward.distance * int(cos(radians(self.bearing))),
+            forward.distance * int(sin(radians(self.bearing)))
+        ))
 
 
-@dataclass
-class Move:
-    direction: str
-    distance: int
+Instruction = Union[Move, Turn, Forward]
 
 
-@dataclass
-class Turn:
-    direction: str
-    degrees: int
-
-
-def get_instruction_from_input(human_instruction: str) -> Union[Turn, Move]:
+def parse_instruction(human_instruction: str) -> Instruction:
     direction = human_instruction[0]
     amount = int(human_instruction[1:])
-    if direction in 'NSEWF':
-        return Move(direction=direction, distance=amount)
-    elif direction in 'LR':
-        return Turn(direction=direction, degrees=amount)
+    if direction == 'N':
+        return Move(0, amount)
+    elif direction == 'E':
+        return Move(amount, 0)
+    elif direction == 'S':
+        return Move(0, -amount)
+    elif direction == 'W':
+        return Move(-amount, 0)
+    elif direction == 'L':
+        return Turn(amount % 360)
+    elif direction == 'R':
+        return Turn(-amount % 360)
+    elif direction == 'F':
+        return Forward(amount)
     else:
         raise ValueError('ERROR - unsupported direction')
 
 
-def get_instructions_from_input(human_instructions: List[str]) -> List[Union[Turn, Move]]:
-    instructions = []
-    for instruction in human_instructions:
-        instructions.append(get_instruction_from_input(instruction))
-    return instructions
+def parse_input(human_instructions: List[str]) -> List[Instruction]:
+    return [parse_instruction(instruction) for instruction in human_instructions]
 
 
-def move_point(point: 'Point', move: 'Move'):
-    if isinstance(point, Boat) and move.direction == 'F':
-        direction = point.bearing
-    else:
-        direction = move.direction
-
-    if direction == 'N':
-        point.y = point.y + move.distance
-    elif direction == 'E':
-        point.x = point.x + move.distance
-    elif direction == 'S':
-        point.y = point.y - move.distance
-    elif direction == 'W':
-        point.x = point.x - move.distance
-    else:
-        raise ValueError('ERROR - unexpected direction')
+def execute_instruction_on_boat(boat: Boat, instruction: Instruction):
+    if isinstance(instruction, Move):
+        boat.move(instruction)
+    elif isinstance(instruction, Turn):
+        boat.turn(instruction)
+    elif isinstance(instruction, Forward):
+        boat.move_forward(instruction)
 
 
-def turn_boat(boat: 'Boat', turn: 'Turn'):
-    bearing_map = {'N': 0, 'E': 90, 'S': 180, 'W': 270}
-    bearing_map_inverse = {degrees: bearing for bearing, degrees in bearing_map.items()}
-    direction_map = {'R': 1, 'L': -1}
-
-    boat_bearing_degrees = bearing_map[boat.bearing]
-    degrees = direction_map[turn.direction] * turn.degrees
-    new_boat_bearing_degrees = (boat_bearing_degrees + degrees) % 360
-    boat.bearing = bearing_map_inverse[new_boat_bearing_degrees]
-
-
-def execute_instruction_on_boat(boat: 'Boat', instruction: 'Union[Turn, Move]'):
-    if isinstance(instruction, Turn):
-        turn_boat(boat, instruction)
-    elif isinstance(instruction, Move):
-        move_point(boat, instruction)
-    else:
-        raise ValueError('ERROR - unsupported action')
-
-
-def execute_all_instructions_on_boat(boat: 'Boat', instructions: List[Union[Turn, Move]]):
+def execute_all_instructions_on_boat(boat: Boat, instructions: List[Instruction]):
     for instruction in instructions:
         execute_instruction_on_boat(boat, instruction)
 
 
-def move_boat_towards_waypoint(boat: 'Boat', waypoint: 'Waypoint', move: 'Move'):
-    move_x = Move(direction='E', distance=(waypoint.x - boat.x) * move.distance)
-    move_y = Move(direction='N', distance=(waypoint.y - boat.y) * move.distance)
-    move_point(boat, move_x)
-    move_point(boat, move_y)
-    move_point(waypoint, move_x)
-    move_point(waypoint, move_y)
-
-
-def turn_waypoint_around_boat(boat: 'Boat', waypoint: 'Waypoint', turn: 'Turn'):
-    diff_x = waypoint.x - boat.x
-    diff_y = waypoint.y - boat.y
-    if turn.degrees == 180:
-        move_point(waypoint, Move(direction='W', distance=2 * diff_x))
-        move_point(waypoint, Move(direction='S', distance=2 * diff_y))
-    elif (turn.degrees == 90 and turn.direction == 'R') or (turn.degrees == 270 and turn.direction == 'L'):
-        move_point(waypoint, Move(direction='W', distance=diff_x - diff_y))
-        move_point(waypoint, Move(direction='S', distance=diff_x + diff_y))
-    elif (turn.degrees == 90 and turn.direction == 'L') or (turn.degrees == 270 and turn.direction == 'R'):
-        move_point(waypoint, Move(direction='W', distance=diff_x + diff_y))
-        move_point(waypoint, Move(direction='N', distance=diff_x - diff_y))
-    else:
-        raise ValueError('ERROR - unsupported waypoint turn')
-
-
-def execute_instruction_on_waypoint(boat: 'Boat', waypoint: 'Waypoint', instruction: 'Union[Turn, Move]'):
-    if isinstance(instruction, Move) and instruction.direction == 'F':
-        move_boat_towards_waypoint(boat, waypoint, instruction)
-    elif isinstance(instruction, Move) and instruction.direction in 'NSEW':
-        move_point(waypoint, instruction)
+def execute_instruction_on_waypoint(boat: Boat, waypoint: Point, instruction: Instruction):
+    if isinstance(instruction, Move):
+        waypoint.move(instruction)
     elif isinstance(instruction, Turn):
-        turn_waypoint_around_boat(boat, waypoint, instruction)
-    else:
-        raise ValueError('ERROR - unsupported instruction')
+        waypoint.rotate(instruction)
+    elif isinstance(instruction, Forward):
+        boat.move(Move(waypoint.x * instruction.distance, waypoint.y * instruction.distance))
 
 
-def execute_all_instructions_on_waypoint(boat: 'Boat', waypoint: 'Waypoint', instructions: 'List[Union[Turn, Move]]'):
+def execute_all_instructions_on_waypoint(boat: Boat, waypoint: Point, instructions: List[Instruction]):
     for instruction in instructions:
         execute_instruction_on_waypoint(boat, waypoint, instruction)
 
 
-def main():
-    with open('input_files/day_12.txt') as f:
-        human_instructions = [line.strip().replace('\n', '') for line in f.readlines()]
-    instructions = get_instructions_from_input(human_instructions)
+def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_12.txt'):
+    with open(file_path) as f:
+        human_instructions = [line.strip() for line in f.readlines()]
+    instructions = parse_input(human_instructions)
     boat = Boat()
     execute_all_instructions_on_boat(boat, instructions)
     print(f'the manhattan distance to the boat is {boat.manhattan_distance}')
     boat = Boat()
-    waypoint = Waypoint(x=10, y=1)
+    waypoint = Point(10, 1)
     execute_all_instructions_on_waypoint(boat, waypoint, instructions)
     print(f'the manhattan distance to the boat is {boat.manhattan_distance}')
 
