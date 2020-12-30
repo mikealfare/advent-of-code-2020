@@ -1,13 +1,18 @@
-from typing import List, Tuple
+from typing import List, Dict
 from itertools import product
 from copy import deepcopy
+from pathlib import Path
+
+
+Seat = Dict[str, bool]
+SeatLayout = List[List[Seat]]
 
 
 filled_map = {'#': True, 'L': False, '.': False}
 can_be_filled_map = {'#': True, 'L': True, '.': False}
 
 
-def get_seat_layout_row(seat_row: str) -> List[dict]:
+def get_seat_layout_row(seat_row: str) -> List[Seat]:
     row = []
     for each_seat in seat_row:
         seat = {
@@ -18,14 +23,14 @@ def get_seat_layout_row(seat_row: str) -> List[dict]:
     return row
 
 
-def get_seat_layout(seat_rows: List[str]) -> List[List[dict]]:
+def get_seat_layout(seat_rows: List[str]) -> SeatLayout:
     layout = []
     for each_row in seat_rows:
         layout.append(get_seat_layout_row(each_row))
     return layout
 
 
-def get_surrounding_seats_filled(seat_layout: List[List[dict]], row: int, column: int) -> int:
+def get_surrounding_seats_filled(seat_layout: SeatLayout, row: int, column: int) -> int:
     seats_to_check = [
         (row + row_offset, column + column_offset)
         for row_offset, column_offset in product([-1, 0, 1], [-1, 0, 1])
@@ -43,7 +48,7 @@ def get_surrounding_seats_filled(seat_layout: List[List[dict]], row: int, column
 
 
 def is_next_visible_seat_filled(
-        seat_layout: List[List[dict]],
+        seat_layout: SeatLayout,
         row: int,
         column: int,
         row_direction: int,
@@ -59,7 +64,7 @@ def is_next_visible_seat_filled(
     return is_next_visible_seat_filled(seat_layout, next_row, next_column, row_direction, column_direction)
 
 
-def get_visible_seats_filled(seat_layout: List[List[dict]], row: int, column: int) -> int:
+def get_visible_seats_filled(seat_layout: SeatLayout, row: int, column: int) -> int:
     seat_count = 0
     for row_offset, column_offset in product([-1, 0, 1], [-1, 0, 1]):
         if row_offset != 0 or column_offset != 0:
@@ -68,7 +73,7 @@ def get_visible_seats_filled(seat_layout: List[List[dict]], row: int, column: in
     return seat_count
 
 
-def get_updated_seat_layout(seat_layout: List[List[dict]]) -> List[List[dict]]:
+def get_updated_seat_layout(seat_layout: SeatLayout) -> SeatLayout:
     updated_seat_layout = deepcopy(seat_layout)
     for row, column in product(range(len(seat_layout)), range(len(seat_layout[0]))):
         if not seat_layout[row][column]['can_be_filled']:
@@ -80,7 +85,7 @@ def get_updated_seat_layout(seat_layout: List[List[dict]]) -> List[List[dict]]:
     return updated_seat_layout
 
 
-def get_stable_seat_layout(seat_layout: List[List[dict]]) -> List[List[dict]]:
+def get_stable_seat_layout(seat_layout: SeatLayout) -> SeatLayout:
     updated_seat_layout = deepcopy(seat_layout)
     while True:
         last_updated_seat_layout = deepcopy(updated_seat_layout)
@@ -89,7 +94,7 @@ def get_stable_seat_layout(seat_layout: List[List[dict]]) -> List[List[dict]]:
             return updated_seat_layout
 
 
-def get_updated_seat_layout_visible_method(seat_layout: List[List[dict]]) -> List[List[dict]]:
+def get_updated_seat_layout_visible_method(seat_layout: SeatLayout) -> SeatLayout:
     updated_seat_layout = deepcopy(seat_layout)
     for row, column in product(range(len(seat_layout)), range(len(seat_layout[0]))):
         if not seat_layout[row][column]['can_be_filled']:
@@ -101,7 +106,7 @@ def get_updated_seat_layout_visible_method(seat_layout: List[List[dict]]) -> Lis
     return updated_seat_layout
 
 
-def get_stable_seat_layout_visible_method(seat_layout: List[List[dict]]) -> List[List[dict]]:
+def get_stable_seat_layout_visible_method(seat_layout: SeatLayout) -> SeatLayout:
     updated_seat_layout = deepcopy(seat_layout)
     while True:
         last_updated_seat_layout = deepcopy(updated_seat_layout)
@@ -110,7 +115,7 @@ def get_stable_seat_layout_visible_method(seat_layout: List[List[dict]]) -> List
             return updated_seat_layout
 
 
-def get_filled_seat_count(seat_layout: List[List[dict]]) -> int:
+def get_filled_seat_count(seat_layout: SeatLayout) -> int:
     filled_count = 0
     for row, column in product(range(len(seat_layout)), range(len(seat_layout[0]))):
         if seat_layout[row][column]['filled']:
@@ -118,9 +123,9 @@ def get_filled_seat_count(seat_layout: List[List[dict]]) -> int:
     return filled_count
 
 
-def main():
-    with open('input_files/day_11.txt') as f:
-        seat_rows = [line.strip().replace('\n', '') for line in f.readlines()]
+def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_11.txt'):
+    with open(file_path) as f:
+        seat_rows = [line.strip() for line in f.readlines()]
     seat_layout = get_seat_layout(seat_rows)
     stable_seat_layout = get_stable_seat_layout(seat_layout)
     stable_seat_count = get_filled_seat_count(stable_seat_layout)

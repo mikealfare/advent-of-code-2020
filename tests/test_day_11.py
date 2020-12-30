@@ -88,7 +88,7 @@ sample_layout_last = sample_layout_5
         {'filled': False, 'can_be_filled': True},
     ])
 ])
-def test_get_seat_layout_row(seat_row: str, expected: List[dict]):
+def test_get_seat_layout_row(seat_row: str, expected: List[day_11.Seat]):
     assert day_11.get_seat_layout_row(seat_row) == expected
 
 
@@ -98,7 +98,7 @@ def test_get_seat_layout_row(seat_row: str, expected: List[dict]):
     (sample_layout_2, 9, 9, 1),
     (sample_layout_2, 6, 9, 3),
 ])
-def test_get_surrounding_seats_filled(seat_layout_human, row, column, expected):
+def test_get_surrounding_seats_filled(seat_layout_human: List[str], row: int, column: int, expected: int):
     seat_layout = day_11.get_seat_layout(seat_layout_human)
     assert day_11.get_surrounding_seats_filled(seat_layout, row, column) == expected
 
@@ -118,14 +118,14 @@ def test_get_updated_seat_layout(seat_layout, expected):
 
 
 @pytest.mark.parametrize('seat_layout,expected', [(sample_layout_0, sample_layout_last)])
-def test_get_stable_seat_layout(seat_layout, expected):
+def test_get_stable_seat_layout(seat_layout: List[str], expected: List[str]):
     starting_layout = day_11.get_seat_layout(seat_layout)
     expected_layout = day_11.get_seat_layout(expected)
     assert day_11.get_stable_seat_layout(starting_layout) == expected_layout
 
 
 @pytest.mark.parametrize('seat_layout,expected', [(sample_layout_0, 37)])
-def test_get_stable_seat_count(seat_layout, expected):
+def test_get_stable_seat_count(seat_layout: List[str], expected: int):
     starting_layout = day_11.get_seat_layout(seat_layout)
     stable_layout = day_11.get_stable_seat_layout(starting_layout)
     assert day_11.get_filled_seat_count(stable_layout) == expected
@@ -163,13 +163,13 @@ sample_layout_visible_3 = [
     (sample_layout_visible_2, 1, 1, 0),
     (sample_layout_visible_3, 3, 3, 0)
 ])
-def test_get_visible_seats_filled(seat_layout_human, row, column, expected):
+def test_get_visible_seats_filled(seat_layout_human: List[str], row: int, column: int, expected: int):
     seat_layout = day_11.get_seat_layout(seat_layout_human)
     assert day_11.get_visible_seats_filled(seat_layout, row, column) == expected
 
 
 @pytest.mark.parametrize('seat_layout,expected', [(sample_layout_0, 26)])
-def test_get_stable_seat_count_visible_method(seat_layout, expected):
+def test_get_stable_seat_count_visible_method(seat_layout: List[str], expected: int):
     starting_layout = day_11.get_seat_layout(seat_layout)
     stable_layout = day_11.get_stable_seat_layout_visible_method(starting_layout)
     assert day_11.get_filled_seat_count(stable_layout) == expected
