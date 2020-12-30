@@ -1,138 +1,113 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple, Set, Optional
 from itertools import product
 from copy import deepcopy
 from pathlib import Path
+from operator import add
 
 
-Seat = Dict[str, bool]
-SeatLayout = List[List[Seat]]
-
-
-filled_map = {'#': True, 'L': False, '.': False}
-can_be_filled_map = {'#': True, 'L': True, '.': False}
-
-
-def get_seat_layout_row(seat_row: str) -> List[Seat]:
-    row = []
-    for each_seat in seat_row:
-        seat = {
-            'filled': filled_map[each_seat],
-            'can_be_filled': can_be_filled_map[each_seat]
-        }
-        row.append(seat)
-    return row
+Seat = Tuple[int, int]
+SeatLayout = Dict[Seat, Dict[str, bool]]
 
 
 def get_seat_layout(seat_rows: List[str]) -> SeatLayout:
-    layout = []
-    for each_row in seat_rows:
-        layout.append(get_seat_layout_row(each_row))
+    filled_map = {'#': True, 'L': False, '.': False}
+    is_seat_map = {'#': True, 'L': True, '.': False}
+    layout = {}
+    for row, row_of_seats in enumerate(seat_rows):
+        for column, single_seat in enumerate(row_of_seats):
+            layout[(row, column)] = {'filled': filled_map[single_seat], 'is_seat': is_seat_map[single_seat]}
     return layout
 
 
-def get_surrounding_seats_filled(seat_layout: SeatLayout, row: int, column: int) -> int:
-    seats_to_check = [
-        (row + row_offset, column + column_offset)
-        for row_offset, column_offset in product([-1, 0, 1], [-1, 0, 1])
-        if (
-            (row_offset != 0 or column_offset != 0) and
-            row + row_offset in range(len(seat_layout)) and
-            column + column_offset in range(len(seat_layout[0]))
-        )
-    ]
-    is_seat_filled = [
-        seat_layout[check_row][check_column]['filled']
-        for check_row, check_column in seats_to_check
-    ]
-    return len([seat for seat in is_seat_filled if seat])
+def filled_seats(seat_layout: SeatLayout) -> Set[Seat]:
+    return {seat for seat, attrs in seat_layout.items() if attrs['is_seat'] and attrs['filled']}
 
 
-def is_next_visible_seat_filled(
-        seat_layout: SeatLayout,
-        row: int,
-        column: int,
-        row_direction: int,
-        column_direction: int
-) -> bool:
-    next_row = row + row_direction
-    next_column = column + column_direction
-    if next_row not in range(len(seat_layout)) or next_column not in range(len(seat_layout[0])):
+def empty_seats(seat_layout: SeatLayout) -> Set[Seat]:
+    return {seat for seat, attrs in seat_layout.items() if attrs['is_seat'] and not attrs['filled']}
+
+
+def is_seat(seat_layout: SeatLayout, seat: Seat) -> bool:
+    if seat not in seat_layout:
         return False
-    next_seat = seat_layout[next_row][next_column]
-    if next_seat['can_be_filled']:
-        return next_seat['filled']
-    return is_next_visible_seat_filled(seat_layout, next_row, next_column, row_direction, column_direction)
+    return seat_layout[seat]['is_seat']
 
 
-def get_visible_seats_filled(seat_layout: SeatLayout, row: int, column: int) -> int:
+def is_filled_seat(seat_layout: SeatLayout, seat: Seat) -> bool:
+    if seat not in seat_layout:
+        return False
+    return seat_layout[seat]['filled']
+
+
+def update_seat(seat_layout: SeatLayout, seat: Seat, is_filled: bool):
+    if is_seat(seat_layout, seat):
+        seat_layout[seat]['filled'] = is_filled
+
+
+def get_next_seat(
+        seat_layout: SeatLayout,
+        seat: Seat,
+        direction: Tuple[int, int],
+        adjacent_only: bool
+) -> Optional[Seat]:
+    next_seat: Seat = tuple(map(add, seat, direction))
+    if next_seat not in seat_layout:
+        return None
+    if adjacent_only or is_seat(seat_layout, next_seat):
+        return next_seat
+    return get_next_seat(seat_layout, next_seat, direction, adjacent_only)
+
+
+def get_next_seats_filled(seat_layout: SeatLayout, seat: Seat, adjacent_only: bool) -> int:
     seat_count = 0
-    for row_offset, column_offset in product([-1, 0, 1], [-1, 0, 1]):
-        if row_offset != 0 or column_offset != 0:
-            if is_next_visible_seat_filled(seat_layout, row, column, row_offset, column_offset):
-                seat_count += 1
+    eight_directions = set(product([-1, 0, 1], [-1, 0, 1])).difference({(0, 0)})
+    for direction in eight_directions:
+        next_seat = get_next_seat(seat_layout, seat, direction, adjacent_only)
+        if is_filled_seat(seat_layout, next_seat):
+            seat_count += 1
     return seat_count
 
 
-def get_updated_seat_layout(seat_layout: SeatLayout) -> SeatLayout:
+def get_seats_to_fill(seat_layout: SeatLayout, adjacent_only: bool) -> Set[Seat]:
+    seats = set()
+    for seat in empty_seats(seat_layout):
+        if get_next_seats_filled(seat_layout, seat, adjacent_only) == 0:
+            seats.add(seat)
+    return seats
+
+
+def get_seats_to_empty(seat_layout: SeatLayout, adjacent_only: bool) -> Set[Seat]:
+    seats = set()
+    for seat in filled_seats(seat_layout):
+        if adjacent_only and get_next_seats_filled(seat_layout, seat, adjacent_only) >= 4:
+            seats.add(seat)
+        elif not adjacent_only and get_next_seats_filled(seat_layout, seat, adjacent_only) >= 5:
+            seats.add(seat)
+    return seats
+
+
+def get_stable_seat_layout(seat_layout: SeatLayout, adjacent_only: bool) -> SeatLayout:
     updated_seat_layout = deepcopy(seat_layout)
-    for row, column in product(range(len(seat_layout)), range(len(seat_layout[0]))):
-        if not seat_layout[row][column]['can_be_filled']:
-            continue
-        if not seat_layout[row][column]['filled'] and get_surrounding_seats_filled(seat_layout, row, column) == 0:
-            updated_seat_layout[row][column]['filled'] = True
-        if seat_layout[row][column]['filled'] and get_surrounding_seats_filled(seat_layout, row, column) >= 4:
-            updated_seat_layout[row][column]['filled'] = False
+    seats_to_fill = get_seats_to_fill(updated_seat_layout, adjacent_only)
+    seats_to_empty = get_seats_to_empty(updated_seat_layout, adjacent_only)
+    while seats_to_fill or seats_to_empty:
+        for seat in seats_to_fill:
+            update_seat(updated_seat_layout, seat, True)
+        for seat in seats_to_empty:
+            update_seat(updated_seat_layout, seat, False)
+        seats_to_fill = get_seats_to_fill(updated_seat_layout, adjacent_only)
+        seats_to_empty = get_seats_to_empty(updated_seat_layout, adjacent_only)
     return updated_seat_layout
-
-
-def get_stable_seat_layout(seat_layout: SeatLayout) -> SeatLayout:
-    updated_seat_layout = deepcopy(seat_layout)
-    while True:
-        last_updated_seat_layout = deepcopy(updated_seat_layout)
-        updated_seat_layout = get_updated_seat_layout(updated_seat_layout)
-        if updated_seat_layout == last_updated_seat_layout:
-            return updated_seat_layout
-
-
-def get_updated_seat_layout_visible_method(seat_layout: SeatLayout) -> SeatLayout:
-    updated_seat_layout = deepcopy(seat_layout)
-    for row, column in product(range(len(seat_layout)), range(len(seat_layout[0]))):
-        if not seat_layout[row][column]['can_be_filled']:
-            continue
-        if not seat_layout[row][column]['filled'] and get_visible_seats_filled(seat_layout, row, column) == 0:
-            updated_seat_layout[row][column]['filled'] = True
-        if seat_layout[row][column]['filled'] and get_visible_seats_filled(seat_layout, row, column) >= 5:
-            updated_seat_layout[row][column]['filled'] = False
-    return updated_seat_layout
-
-
-def get_stable_seat_layout_visible_method(seat_layout: SeatLayout) -> SeatLayout:
-    updated_seat_layout = deepcopy(seat_layout)
-    while True:
-        last_updated_seat_layout = deepcopy(updated_seat_layout)
-        updated_seat_layout = get_updated_seat_layout_visible_method(updated_seat_layout)
-        if updated_seat_layout == last_updated_seat_layout:
-            return updated_seat_layout
-
-
-def get_filled_seat_count(seat_layout: SeatLayout) -> int:
-    filled_count = 0
-    for row, column in product(range(len(seat_layout)), range(len(seat_layout[0]))):
-        if seat_layout[row][column]['filled']:
-            filled_count += 1
-    return filled_count
 
 
 def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_11.txt'):
     with open(file_path) as f:
         seat_rows = [line.strip() for line in f.readlines()]
     seat_layout = get_seat_layout(seat_rows)
-    stable_seat_layout = get_stable_seat_layout(seat_layout)
-    stable_seat_count = get_filled_seat_count(stable_seat_layout)
-    print(f'there are {stable_seat_count} filled seats in the stable layout')
-    stable_seat_layout_visible_method = get_stable_seat_layout_visible_method(seat_layout)
-    stable_seat_count_visible_method = get_filled_seat_count(stable_seat_layout_visible_method)
-    print(f'there are {stable_seat_count_visible_method} filled seats in the visible method stable layout')
+    stable_seat_layout_adjacent = get_stable_seat_layout(seat_layout, True)
+    print(f'there are {len(filled_seats(stable_seat_layout_adjacent))} filled seats in the stable adjacent layout')
+    stable_seat_layout_visible = get_stable_seat_layout(seat_layout, False)
+    print(f'there are {len(filled_seats(stable_seat_layout_visible))} filled seats in the stable visible layout')
 
 
 if __name__ == '__main__':
