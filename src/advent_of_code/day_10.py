@@ -1,20 +1,21 @@
-from typing import List, Tuple
+from typing import List
 from collections import Counter
 from copy import deepcopy
+from pathlib import Path
 
 
-def get_joltage_differences(adaptors: List[int]) -> list:
+Adaptor = int
+
+
+def get_joltage_differences(adaptors: List[Adaptor]) -> List[int]:
     ordered_adaptors = deepcopy(adaptors)
-    ordered_adaptors.append(0)
-    ordered_adaptors.append(max(adaptors) + 3)
+    ordered_adaptors.extend([0, max(adaptors) + 3])
     ordered_adaptors.sort()
-    differences = []
-    for adaptor in range(1, len(ordered_adaptors)):
-        differences.append(ordered_adaptors[adaptor] - ordered_adaptors[adaptor - 1])
+    differences = [this - previous for this, previous in zip(ordered_adaptors[1:], ordered_adaptors[:-1])]
     return differences
 
 
-def get_joltage_difference_distribution(adaptors: List[int]) -> Counter:
+def get_joltage_difference_distribution(adaptors: List[Adaptor]) -> Counter:
     joltage_differences = get_joltage_differences(adaptors)
     return Counter(joltage_differences)
 
@@ -35,19 +36,18 @@ def get_valid_adaptor_combinations(joltage_differences: List[int]) -> int:
         return 1
 
     remaining_differences_if_included = joltage_differences[1:]
+    combinations_including_this_adaptor = get_valid_adaptor_combinations(remaining_differences_if_included)
 
     remaining_differences_if_excluded = joltage_differences[1:]
     remaining_differences_if_excluded[0] += joltage_differences[0]
-
-    combinations_including_this_adaptor = get_valid_adaptor_combinations(remaining_differences_if_included)
     combinations_excluding_this_adaptor = get_valid_adaptor_combinations(remaining_differences_if_excluded)
 
     return combinations_including_this_adaptor + combinations_excluding_this_adaptor
 
 
-def main():
-    with open('input_files/day_10.txt') as f:
-        adaptors = [int(line.strip().replace('\n', '')) for line in f.readlines()]
+def main(file_path: Path = Path(__file__).parent / 'input_files' / 'day_10.txt'):
+    with open(file_path) as f:
+        adaptors = [int(line.strip()) for line in f.readlines()]
     joltage_distribution = get_joltage_difference_distribution(adaptors)
     print(f'1-jolt * 3-jolt is {joltage_distribution[1] * joltage_distribution[3]}')
     joltage_differences = get_joltage_differences(adaptors)
