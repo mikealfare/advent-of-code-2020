@@ -8,7 +8,7 @@ from tests.conftest import day_02
     ('2-9 c', 'ccccccccc', True),
 ])
 def test_is_valid_by_count(rule: str, password: str, expected: bool):
-    assert day_02.is_valid_by_count(password, rule) == expected
+    assert day_02.is_valid_by_count(rule, password) == expected
 
 
 @pytest.mark.parametrize('rule,password,expected', [
@@ -19,4 +19,4 @@ def test_is_valid_by_count(rule: str, password: str, expected: bool):
     ('8-11 l', 'qllllqllklhlvtl', True),
 ])
 def test_is_valid_by_existence(rule: str, password: str, expected: bool):
-    assert day_02.is_valid_by_existence(password, rule) == expected
+    assert day_02.is_valid_by_existence(rule, password) == expected
