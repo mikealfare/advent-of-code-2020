@@ -3,11 +3,9 @@ from copy import deepcopy
 
 
 def get_masked_value(value: int, mask: str) -> int:
-    binary_chars = [char for char in str(bin(value))[2:].zfill(36)]
-    for spot, value in enumerate(mask):
-        if value != 'X':
-            binary_chars[spot] = value
-    return int(''.join(binary_chars), 2)
+    binary_str = str(bin(value))[2:].zfill(36)
+    masked_str = [mask if mask != 'X' else orig for orig, mask in zip(binary_str, mask)]
+    return int(''.join(masked_str), 2)
 
 
 def update_memory(memory: dict, write_instruction: str, mask: str):
