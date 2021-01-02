@@ -3,112 +3,127 @@ from pathlib import Path
 from math import prod
 
 
-def parse_human_rule(human_rule: str) -> Dict[str, List[Tuple[int, int]]]:
-    """
-    e.g.: departure_location: [(a, b), (c, d)]
-    """
-    field_name, valid_ranges = human_rule.split(':')
+Ticket = Tuple[int, ...]
+ValidValues = List[Tuple[int, int]]
+Rules = Dict[str, ValidValues]
+
+
+def parse_human_rule(human_rule: str) -> Tuple[str, ValidValues]:
+    field_name, valid_values_string = human_rule.split(': ')
     field_name.replace(' ', '_')
-    valid_ranges_strings = [tuple(valid_range.split('-')) for valid_range in valid_ranges.split('or')]
-    valid_ranges = []
-    for start, end in valid_ranges_strings:
-        valid_range = int(start.strip()), int(end.strip())
-        valid_ranges.append(valid_range)
-    return {field_name: valid_ranges}
+    valid_values = [
+        tuple(
+            int(end_point)
+            for end_point in valid_range.split('-')
+        )
+        for valid_range in valid_values_string.split(' or ')
+    ]
+    return field_name, valid_values
 
 
-def parse_input() -> Tuple[Dict[str, List[Tuple[int, int]]], List[int], List[List[int]]]:
+def parse_input() -> Tuple[Rules, Ticket, Set[Ticket]]:
     with open(Path(__file__).parent / 'input_files' / 'day_16.txt') as f:
         rules = {}
         for i in range(20):
-            rules.update(parse_human_rule(f.readline().strip()))
+            field, valid_values = parse_human_rule(f.readline().strip())
+            rules[field] = valid_values
         for i in range(2):
             skipped_lines = f.readline()
-        your_ticket = [int(number) for number in f.readline().strip().split(',')]
+        your_ticket = tuple(int(number) for number in f.readline().strip().split(','))
         for i in range(2):
             skipped_lines = f.readline()
-        nearby_tickets = []
+        nearby_tickets = set()
         for i in range(241):
-            nearby_tickets.append([int(number) for number in f.readline().strip().split(',')])
+            nearby_tickets.add(tuple(int(number) for number in f.readline().strip().split(',')))
         return rules, your_ticket, nearby_tickets
 
 
-def is_valid_value(value: int, rule_ranges: List[Tuple[int, int]]) -> bool:
-    for rule_range in rule_ranges:
-        if value in range(rule_range[0], rule_range[1] + 1):
-            return True
-    return False
+def is_valid_value(value: int, valid_ranges: ValidValues) -> bool:
+    return any({value in range(valid_range[0], valid_range[1] + 1) for valid_range in valid_ranges})
 
 
-def get_globally_invalid_values_on_ticket(ticket: List[int], rules: Dict[str, List[Tuple[int, int]]]) -> Set[int]:
-    invalid_values = set()
+def get_sum_of_invalid_values(ticket: Ticket, rules: Rules) -> int:
+    sum_of_invalid_values = 0
     for value in ticket:
-        is_invalid = True
-        for rule_ranges in rules.values():
-            if is_valid_value(value, rule_ranges):
-                is_invalid = False
-        if is_invalid:
-            invalid_values.add(value)
-    return invalid_values
+        globally_invalid = all([
+            not is_valid_value(value, valid_ranges)
+            for valid_ranges in rules.values()
+        ])
+        if globally_invalid:
+            sum_of_invalid_values += value
+    return sum_of_invalid_values
 
 
-def is_valid_field(rule_ranges: List[Tuple[int, int]], field_values: List[int]) -> bool:
-    for value in field_values:
-        if not is_valid_value(value, rule_ranges):
-            return False
-    return True
+def get_sum_of_invalid_values_by_ticket(tickets: Set[Ticket], rules: Rules) -> Dict[Ticket, int]:
+    return {ticket: get_sum_of_invalid_values(ticket, rules) for ticket in tickets}
 
 
-def get_valid_fields_by_rule(rules: Dict[str, List[Tuple[int, int]]], tickets: List[List[int]]) -> Dict[str, List[int]]:
+def get_all_values_by_field(tickets: Set[Ticket]) -> Dict[int, Set[int]]:
     field_values = {}
-    for i in range(len(tickets[0])):
-        field_values.update({i: [ticket[i] for ticket in tickets]})
-
-    valid_fields = {}
-    for field_name, rule_ranges in rules.items():
-        valid_fields.update({field_name: []})
-        for field_position, values in field_values.items():
-            if is_valid_field(rule_ranges, values):
-                valid_fields[field_name].append(field_position)
-
-    return valid_fields
+    for ticket in tickets:
+        for field, value in enumerate(ticket):
+            if field not in field_values:
+                field_values[field] = set()
+            field_values[field].add(value)
+    return field_values
 
 
-def get_field_assignment(rules: Dict[str, List[Tuple[int, int]]], tickets: List[List[int]]) -> Dict[str, int]:
-    valid_fields = get_valid_fields_by_rule(rules, tickets)
-    field_assignment = {}
-
-    while len(field_assignment) < len(valid_fields):
-        for field_position in field_assignment.values():
-            for valid_positions in valid_fields.values():
-                if field_position in valid_positions:
-                    valid_positions.remove(field_position)
-
-        for field_name, valid_positions in valid_fields.items():
-            if len(valid_positions) == 1:
-                field_assignment.update({field_name: valid_positions[0]})
-
-    return field_assignment
+def is_valid_field(field_values: Set[int], valid_ranges: ValidValues) -> bool:
+    return all({is_valid_value(value, valid_ranges) for value in field_values})
 
 
-def get_ticket(ticket_values: List[int], field_assignment: Dict[str, int]) -> Dict[str, int]:
-    return {field_name: ticket_values[field_position] for field_name, field_position in field_assignment.items()}
+def get_valid_positions(valid_ranges: ValidValues, all_field_values: Dict[int, Set[int]]) -> Set[int]:
+    return {
+        field_position
+        for field_position, field_values in all_field_values.items()
+        if is_valid_field(field_values, valid_ranges)
+    }
+
+
+def get_valid_positions_for_all_fields(rules: Rules, tickets: Set[Ticket]) -> Dict[str, Set[int]]:
+    all_field_values = get_all_values_by_field(tickets)
+    valid_field_positions = {
+        field_name: get_valid_positions(valid_ranges, all_field_values)
+        for field_name, valid_ranges in rules.items()
+    }
+    return valid_field_positions
+
+
+def get_field_assignment(rules: Rules, tickets: Set[Ticket]) -> Dict[str, int]:
+    valid_field_positions = get_valid_positions_for_all_fields(rules, tickets)
+    assigned_fields = {}
+
+    while len(assigned_fields) < len(valid_field_positions):
+        valid_field_positions.update({
+            field_name: valid_positions.difference(assigned_fields.values())
+            for field_name, valid_positions in valid_field_positions.items()
+        })
+        assigned_fields.update({
+            field_name: valid_positions.pop()
+            for field_name, valid_positions in valid_field_positions.items()
+            if len(valid_positions) == 1
+        })
+
+    return assigned_fields
+
+
+def get_ticket(ticket: Ticket, field_assignment: Dict[str, int]) -> Dict[str, int]:
+    return {field_name: ticket[field_position] for field_name, field_position in field_assignment.items()}
 
 
 def main():
     rules, your_ticket, nearby_tickets = parse_input()
-    invalid_values_sum = 0
-    valid_tickets = []
-    for ticket in nearby_tickets:
-        invalid_values = get_globally_invalid_values_on_ticket(ticket, rules)
-        if len(invalid_values) == 0:
-            valid_tickets.append(ticket)
-        invalid_values_sum += sum(invalid_values)
-    print(f'the sum of all invalid values is: {invalid_values_sum}')
-    valid_tickets.append(your_ticket)
+    sum_of_invalid_values_by_ticket = get_sum_of_invalid_values_by_ticket(nearby_tickets, rules)
+    sum_of_invalid_values = sum(sum_of_invalid_values_by_ticket.values())
+    print(f'the sum of all invalid values is: {sum_of_invalid_values}')
+    valid_tickets = {
+        ticket
+        for ticket, sum_of_invalid_values in sum_of_invalid_values_by_ticket.items()
+        if sum_of_invalid_values == 0
+    }
+    valid_tickets.add(your_ticket)
     field_assignment = get_field_assignment(rules, valid_tickets)
     ticket = get_ticket(your_ticket, field_assignment)
-    print(ticket)
     answer = prod([value for field, value in ticket.items() if 'departure' in field])
     print(f'the answer is {answer}')
 
